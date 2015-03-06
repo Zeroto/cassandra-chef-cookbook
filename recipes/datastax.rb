@@ -103,19 +103,17 @@ when 'debian'
     action :stop
   end
 
-  node[:cassandra][:data_dir].each do |dir|
-    directory dir do
-      recursive true
-      action :delete
-    end
-    directory dir do
-      owner node[:cassandra][:user]
-      group node[:cassandra][:group]
-      recursive true
-      mode 0755
-    end
+  default_data_dir = '/var/lib/cassandra/data';
+  directory default_data_dir do
+    recursive true
+    action :delete
   end
-  
+  directory default_data_dir do
+    owner node[:cassandra][:user]
+    group node[:cassandra][:group]
+    recursive true
+    mode 0755
+  end
 
 when 'rhel'
   node.default['cassandra']['conf_dir']  = '/etc/cassandra/conf'
