@@ -99,7 +99,7 @@ when 'debian'
     options '--force-yes -o Dpkg::Options::="--force-confold"'
     # giving C* some time to start up
     notifies :run, 'ruby_block[sleep30s]', :immediately
-    notifies :run, 'execute[set_cluster_name]', :immediately
+    notifies :run, 'service[cassandra]', :immediately
   end
 
   ruby_block 'sleep30s' do
@@ -109,11 +109,10 @@ when 'debian'
     action :nothing
   end
 
-  execute 'set_cluster_name' do
-    command "/usr/bin/cqlsh -e \"update system.local set cluster_name='#{node['cassandra']['cluster_name']}' where key='local';\"; /usr/bin/nodetool flush;"
-    notifies :restart, 'service[cassandra]', :delayed
-    action :nothing
+  service 'cassandra' do
+    action 'stop'
   end
+  
 
 when 'rhel'
   node.default['cassandra']['conf_dir']  = '/etc/cassandra/conf'
@@ -251,6 +250,19 @@ link "#{node['cassandra']['lib_dir']}/#{node['cassandra']['jamm']['jar_name']}" 
   to "/usr/share/java/#{node['cassandra']['jamm']['jar_name']}"
   notifies :restart, 'service[cassandra]', :delayed if node['cassandra']['notify_restart']
   only_if { node['cassandra']['setup_jamm'] }
+end
+
+node[:cassandra][:data_dir].each do |dir|
+  directory dir do
+    recursive true
+    action :delete
+  end
+  directory dir do
+    owner node[:cassandra][:user]
+    group node[:cassandra][:group]
+    recursive true
+    mode 0755
+  end
 end
 
 service 'cassandra' do
