@@ -99,7 +99,7 @@ when 'debian'
     options '--force-yes -o Dpkg::Options::="--force-confold"'
     # giving C* some time to start up
     notifies :run, 'ruby_block[sleep30s]', :immediately
-    notifies :run, 'service[cassandra]', :immediately
+    notifies :stop, 'service[cassandra]', :immediately
   end
 
   ruby_block 'sleep30s' do
@@ -110,7 +110,7 @@ when 'debian'
   end
 
   service 'cassandra' do
-    action 'stop'
+    action :nothing
   end
   
 
