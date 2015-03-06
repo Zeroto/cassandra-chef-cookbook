@@ -97,16 +97,7 @@ when 'debian'
   package node['cassandra']['package_name'] do
     action :install
     options '--force-yes -o Dpkg::Options::="--force-confold"'
-    # giving C* some time to start up
-    notifies :run, 'ruby_block[sleep30s]', :immediately
     notifies :stop, 'service[cassandra]', :immediately
-  end
-
-  ruby_block 'sleep30s' do
-    block do
-      sleep 30
-    end
-    action :nothing
   end
 
   service 'cassandra' do
