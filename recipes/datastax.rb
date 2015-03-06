@@ -97,11 +97,23 @@ when 'debian'
   package node['cassandra']['package_name'] do
     action :install
     options '--force-yes -o Dpkg::Options::="--force-confold"'
-    notifies :stop, 'service[cassandra]', :immediately
   end
 
   service 'cassandra' do
-    action :nothing
+    action :stop
+  end
+
+  node[:cassandra][:data_dir].each do |dir|
+    directory dir do
+      recursive true
+      action :delete
+    end
+    directory dir do
+      owner node[:cassandra][:user]
+      group node[:cassandra][:group]
+      recursive true
+      mode 0755
+    end
   end
   
 
@@ -241,19 +253,6 @@ link "#{node['cassandra']['lib_dir']}/#{node['cassandra']['jamm']['jar_name']}" 
   to "/usr/share/java/#{node['cassandra']['jamm']['jar_name']}"
   notifies :restart, 'service[cassandra]', :delayed if node['cassandra']['notify_restart']
   only_if { node['cassandra']['setup_jamm'] }
-end
-
-node[:cassandra][:data_dir].each do |dir|
-  directory dir do
-    recursive true
-    action :delete
-  end
-  directory dir do
-    owner node[:cassandra][:user]
-    group node[:cassandra][:group]
-    recursive true
-    mode 0755
-  end
 end
 
 service 'cassandra' do
